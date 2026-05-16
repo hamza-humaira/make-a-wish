@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #000;
+  overflow: hidden;
+}
+
+@keyframes twinkle-cross {
+  0%, 100% { opacity: 0.22; filter: brightness(0.95); }
+  50%       { opacity: 0.72; filter: brightness(1.35); }
+}
+
+@keyframes landing-cta-shine {
+  0%, 100% {
+    text-shadow:
+      0 0 1px rgba(255, 255, 255, 0.95),
+      0 0 14px rgba(220, 160, 255, 0.55),
+      0 0 32px rgba(150, 90, 190, 0.35);
+    opacity: 1;
+  }
+  50% {
+    text-shadow:
+      0 0 1px rgba(255, 255, 255, 1),
+      0 0 20px rgba(232, 190, 255, 0.65),
+      0 0 40px rgba(140, 80, 180, 0.4);
+    opacity: 0.98;
+  }
+}
+
+.landing-cta-text {
+  animation: landing-cta-shine 3.4s ease-in-out infinite;
+}
+
+.landing-cta-text--leaving {
+  animation: none;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.45);
+}
+
+@keyframes star-wish-float {
+  0%,
+  100% {
+    transform: translateY(-5px);
+  }
+  50% {
+    transform: translateY(12px);
+  }
+}
+
+.star-wish-float-inner {
+  animation: star-wish-float 2.35s ease-in-out infinite;
+}
+
+.wish-thumb-soft {
+  animation: wish-thumb-breathe 5s ease-in-out infinite;
+  filter: drop-shadow(0 0 3px rgba(200, 185, 235, 0.4))
+    drop-shadow(0 0 10px rgba(130, 110, 175, 0.22));
+}
+
+.wish-dot-soft {
+  border-radius: 1px;
+  background: rgba(245, 240, 255, 0.85);
+  box-shadow:
+    0 0 6px rgba(200, 185, 235, 0.45),
+    0 0 14px rgba(120, 100, 160, 0.25);
+}
+
+@keyframes wish-thumb-breathe {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+  }
+}
