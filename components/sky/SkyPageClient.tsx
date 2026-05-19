@@ -13,10 +13,7 @@ import { readAmbientEnabled, writeAmbientEnabled } from "@/lib/ambient-preferenc
 
 function hexToRgba(hex: string, alpha: number): string {
   const h = hex.replace(/^#/, "")
-  const full =
-    h.length === 3
-      ? h.split("").map((c) => c + c).join("")
-      : h
+  const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h
   const n = parseInt(full, 16)
   if (Number.isNaN(n)) return `rgba(255,255,255,${alpha})`
   const r = (n >> 16) & 255
@@ -31,8 +28,7 @@ function dabBrushAlongLine(ctx: CanvasRenderingContext2D, ax: number, ay: number
   const dx = bx - ax
   const dy = by - ay
   const dist = Math.hypot(dx, dy)
-  const step = 3.2
-  const steps = Math.max(1, Math.ceil(dist / step))
+  const steps = Math.max(1, Math.ceil(dist / 3.2))
   const radius = 7
   for (let i = 1; i <= steps; i++) {
     const t = i / steps
@@ -56,8 +52,7 @@ function dabEraserAlongLine(ctx: CanvasRenderingContext2D, ax: number, ay: numbe
   const dx = bx - ax
   const dy = by - ay
   const dist = Math.hypot(dx, dy)
-  const step = 5
-  const steps = Math.max(1, Math.ceil(dist / step))
+  const steps = Math.max(1, Math.ceil(dist / 5))
   const radius = 13
   for (let i = 1; i <= steps; i++) {
     const t = i / steps
@@ -189,10 +184,10 @@ export default function SkyPageClient() {
   const getPos = useCallback((e: PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current
     if (!canvas) return { x: 0, y: 0 }
-    const r = canvas.getBoundingClientRect()
-    const scaleX = canvas.width / r.width
-    const scaleY = canvas.height / r.height
-    return { x: (e.clientX - r.left) * scaleX, y: (e.clientY - r.top) * scaleY }
+    return {
+      x: e.nativeEvent.offsetX,
+      y: e.nativeEvent.offsetY,
+    }
   }, [])
 
   const drawSegment = useCallback((from: { x: number; y: number }, to: { x: number; y: number }) => {
@@ -348,18 +343,7 @@ export default function SkyPageClient() {
       {/* Background twinkle stars */}
       <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none" }}>
         {bgStars.map((star) => (
-          <div
-            key={star.id}
-            style={{
-              position: "absolute",
-              left: `${star.x}%`,
-              top: `${star.y}%`,
-              width: "1px",
-              height: "1px",
-              animation: `twinkle-cross ${star.duration}s ease-in-out infinite`,
-              animationDelay: `${star.delay}s`,
-            }}
-          >
+          <div key={star.id} style={{ position: "absolute", left: `${star.x}%`, top: `${star.y}%`, width: "1px", height: "1px", animation: `twinkle-cross ${star.duration}s ease-in-out infinite`, animationDelay: `${star.delay}s` }}>
             <div style={{ position: "absolute", width: `${star.size}px`, height: "1px", background: "rgba(255,255,255,0.55)", top: 0, left: "50%", transform: "translate(-50%, -50%)", boxShadow: STAR_CROSS_SHADOW }} />
             <div style={{ position: "absolute", width: "1px", height: `${star.size}px`, background: "rgba(255,255,255,0.55)", top: 0, left: "50%", transform: "translate(-50%, -50%)", boxShadow: STAR_CROSS_SHADOW }} />
             <div style={{ position: "absolute", width: "2px", height: "2px", borderRadius: "50%", background: "rgba(255,255,255,0.75)", top: 0, left: "50%", transform: "translate(-50%, -50%)", boxShadow: STAR_CORE_SHADOW }} />
@@ -371,99 +355,38 @@ export default function SkyPageClient() {
       {(stage === "browse" || stage === "draw") && wishes.length > 0 && (
         <div style={{ position: "absolute", inset: 0, zIndex: 7, pointerEvents: stage === "browse" ? "auto" : "none" }}>
           {wishes.map((w) => (
-            <button
-              key={w.id}
-              type="button"
-              title="Read wish"
-              onClick={() => setSelectedWish(w)}
-              style={{
-                position: "absolute",
-                left: `${w.star_x}%`,
-                top: `${w.star_y}%`,
-                transform: "translate(-50%, -50%)",
-                width: "44px",
-                height: "44px",
-                border: "none",
-                padding: 0,
-                borderRadius: 0,
-                cursor: stage === "browse" ? "pointer" : "default",
-                background: "transparent",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {w.drawing_data ? (
+            <button key={w.id} type="button" title="Read wish" onClick={() => setSelectedWish(w)}
+              style={{ position: "absolute", left: `${w.star_x}%`, top: `${w.star_y}%`, transform: "translate(-50%, -50%)", width: "44px", height: "44px", border: "none", padding: 0, borderRadius: 0, cursor: stage === "browse" ? "pointer" : "default", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {w.drawing_data
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={w.drawing_data} alt="" className="wish-thumb-soft" style={{ width: "36px", height: "36px", objectFit: "contain", pointerEvents: "none" }} />
-              ) : (
-                <span className="wish-dot-soft" style={{ width: "4px", height: "4px", pointerEvents: "none", display: "block" }} />
-              )}
+                ? <img src={w.drawing_data} alt="" className="wish-thumb-soft" style={{ width: "36px", height: "36px", objectFit: "contain", pointerEvents: "none" }} />
+                : <span className="wish-dot-soft" style={{ width: "4px", height: "4px", pointerEvents: "none", display: "block" }} />
+              }
             </button>
           ))}
         </div>
       )}
 
-      {/* Overlay gradient */}
       <div style={{ position: "absolute", inset: 0, zIndex: 4, pointerEvents: "none", background: ["radial-gradient(ellipse 85% 70% at 70% 35%, rgba(6,3,14,0.55) 0%, transparent 55%)", "radial-gradient(circle at 50% 120%, rgba(40,20,70,0.2), transparent 45%)"].join(", ") }} />
-
-      {/* Border frame */}
       <div style={{ position: "absolute", top: "16px", left: "16px", right: "16px", bottom: "16px", border: "1px solid rgba(255,255,255,0.22)", pointerEvents: "none", zIndex: 5 }} />
-
-      {/* Title bar */}
       <div style={{ position: "absolute", top: "16px", left: "16px", right: "16px", height: "44px", background: "linear-gradient(180deg, rgba(28,24,36,0.92) 0%, rgba(12,10,18,0.88) 100%)", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", zIndex: 6, pointerEvents: "none" }}>
         <div style={{ width: "14px", height: "14px", background: "rgba(255,255,255,0.12)", borderRadius: "2px" }} />
-        <span style={{ fontFamily: "'Courier New', monospace", color: "rgba(230,220,255,0.88)", fontSize: "14px", fontWeight: "bold", letterSpacing: "0.22em" }}>
-          Make a wish
-        </span>
+        <span style={{ fontFamily: "'Courier New', monospace", color: "rgba(230,220,255,0.88)", fontSize: "14px", fontWeight: "bold", letterSpacing: "0.22em" }}>Make a wish</span>
         <div style={{ width: "14px", height: "14px", background: "rgba(255,255,255,0.12)", borderRadius: "2px" }} />
       </div>
 
-      {/* Music toggle */}
-      <button
-        type="button"
-        onClick={toggleMusic}
-        style={{
-          position: "absolute", top: "72px", right: "24px", zIndex: 10000,
-          cursor: "pointer", fontFamily: "'Courier New', monospace", fontSize: "11px",
-          letterSpacing: "0.14em", textTransform: "uppercase",
-          color: musicOn ? "rgba(200,255,220,0.85)" : "rgba(255,200,255,0.75)",
-          background: "rgba(12,8,22,0.55)", border: "1px solid rgba(255,255,255,0.16)",
-          borderRadius: "999px", padding: "8px 14px", backdropFilter: "blur(10px)",
-        }}
-      >
+      <button type="button" onClick={toggleMusic} style={{ position: "absolute", top: "72px", right: "24px", zIndex: 10000, cursor: "pointer", fontFamily: "'Courier New', monospace", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: musicOn ? "rgba(200,255,220,0.85)" : "rgba(255,200,255,0.75)", background: "rgba(12,8,22,0.55)", border: "1px solid rgba(255,255,255,0.16)", borderRadius: "999px", padding: "8px 14px", backdropFilter: "blur(10px)" }}>
         {musicOn ? "♪ On" : "♪ Off"}
       </button>
 
-      {/* New wish button */}
       {stage === "browse" && (
-        <button
-          type="button"
-          onClick={startNewWish}
-          style={{
-            position: "absolute", top: "118px", right: "24px", zIndex: 10000,
-            fontFamily: "'Courier New', monospace", fontSize: "11px",
-            letterSpacing: "0.16em", textTransform: "uppercase",
-            color: "rgba(232,196,255,0.95)", background: "rgba(120,70,160,0.45)",
-            border: "1px solid rgba(255,255,255,0.22)", borderRadius: "999px",
-            padding: "10px 18px", cursor: "pointer", backdropFilter: "blur(8px)",
-          }}
-        >
+        <button type="button" onClick={startNewWish} style={{ position: "absolute", top: "118px", right: "24px", zIndex: 10000, fontFamily: "'Courier New', monospace", fontSize: "11px", letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(232,196,255,0.95)", background: "rgba(120,70,160,0.45)", border: "1px solid rgba(255,255,255,0.22)", borderRadius: "999px", padding: "10px 18px", cursor: "pointer", backdropFilter: "blur(8px)" }}>
           New wish
         </button>
       )}
 
-      {/* Corner marks */}
       {["tl", "tr", "bl", "br"].map((k) => (
-        <div key={k} style={{
-          position: "absolute",
-          ...(k === "tl" ? { top: 8, left: 8 } : {}),
-          ...(k === "tr" ? { top: 8, right: 8 } : {}),
-          ...(k === "bl" ? { bottom: 8, left: 8 } : {}),
-          ...(k === "br" ? { bottom: 8, right: 8 } : {}),
-          width: "8px", height: "8px", border: "1px solid rgba(255,255,255,0.28)",
-          zIndex: 7, pointerEvents: "none",
-        }} />
+        <div key={k} style={{ position: "absolute", ...(k === "tl" ? { top: 8, left: 8 } : {}), ...(k === "tr" ? { top: 8, right: 8 } : {}), ...(k === "bl" ? { bottom: 8, left: 8 } : {}), ...(k === "br" ? { bottom: 8, right: 8 } : {}), width: "8px", height: "8px", border: "1px solid rgba(255,255,255,0.28)", zIndex: 7, pointerEvents: "none" }} />
       ))}
 
       {/* Drawing workspace */}
@@ -474,8 +397,7 @@ export default function SkyPageClient() {
           <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "center" }}>
             {COLORS.map((c) => (
               <button key={c} type="button" title={c} onClick={() => { setColor(c); setTool("brush") }}
-                style={{ width: "22px", height: "22px", borderRadius: "50%", background: c, border: color === c && tool !== "eraser" ? "2px solid rgba(255,255,255,0.85)" : "1px solid rgba(0,0,0,0.35)", cursor: "pointer", padding: 0, boxShadow: "0 0 0 1px rgba(255,255,255,0.12) inset" }}
-              />
+                style={{ width: "22px", height: "22px", borderRadius: "50%", background: c, border: color === c && tool !== "eraser" ? "2px solid rgba(255,255,255,0.85)" : "1px solid rgba(0,0,0,0.35)", cursor: "pointer", padding: 0, boxShadow: "0 0 0 1px rgba(255,255,255,0.12) inset" }} />
             ))}
           </div>
           <div style={{ width: "100%", height: "1px", background: "rgba(255,255,255,0.08)" }} />
@@ -500,42 +422,12 @@ export default function SkyPageClient() {
               Draw your star to make a wish
             </p>
             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-              <button
-                type="button"
-                onClick={() => setStage("browse")}
-                style={{
-                  fontFamily: "'Courier New', monospace",
-                  fontSize: "11px",
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.35)",
-                  background: "transparent",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: "999px",
-                  padding: "10px 22px",
-                  cursor: "pointer",
-                }}
-              >
+              <button type="button" onClick={() => setStage("browse")}
+                style={{ fontFamily: "'Courier New', monospace", fontSize: "11px", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", background: "transparent", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "999px", padding: "10px 22px", cursor: "pointer" }}>
                 Skip — just browse
               </button>
-              <button
-                type="button"
-                onClick={goToWishFromDraw}
-                style={{
-                  fontFamily: "'Courier New', monospace",
-                  fontSize: "11px",
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
-                  color: "rgba(232,196,255,0.95)",
-                  background: "rgba(120,70,160,0.45)",
-                  border: "1px solid rgba(255,255,255,0.22)",
-                  borderRadius: "999px",
-                  padding: "10px 26px",
-                  cursor: "pointer",
-                  backdropFilter: "blur(8px)",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.35)",
-                }}
-              >
+              <button type="button" onClick={goToWishFromDraw}
+                style={{ fontFamily: "'Courier New', monospace", fontSize: "11px", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(232,196,255,0.95)", background: "rgba(120,70,160,0.45)", border: "1px solid rgba(255,255,255,0.22)", borderRadius: "999px", padding: "10px 26px", cursor: "pointer", backdropFilter: "blur(8px)", boxShadow: "0 8px 24px rgba(0,0,0,0.35)" }}>
                 Done
               </button>
             </div>
@@ -543,7 +435,6 @@ export default function SkyPageClient() {
         </div>
       </div>
 
-      {/* Floating star preview */}
       {stage === "wish" && starThumb && (
         <div style={{ position: "fixed", left: "50%", top: "min(16vh, 132px)", zIndex: 22, transform: "translateX(-50%)", pointerEvents: "none", background: "transparent" }}>
           <div className="star-wish-float-inner" style={{ background: "transparent" }}>
@@ -555,23 +446,12 @@ export default function SkyPageClient() {
 
       <div style={{ position: "absolute", inset: 0, zIndex: 14, pointerEvents: sheetOpen ? "auto" : "none", background: sheetOpen ? "rgba(0,0,0,0.06)" : "transparent", opacity: sheetOpen ? 1 : 0, transition: "opacity 0.35s ease" }} aria-hidden={!sheetOpen} />
 
-      {/* Wish text sheet */}
-      <div
-        style={{ position: "absolute", left: "16px", right: "16px", bottom: "16px", zIndex: 20, maxHeight: sheetOpen ? "min(52vh, 440px)" : "0", opacity: sheetOpen ? 1 : 0, transform: sheetOpen ? "translateY(0)" : "translateY(110%)", transition: "transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease, max-height 0.42s ease", pointerEvents: sheetOpen ? "auto" : "none" }}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div style={{ position: "absolute", left: "16px", right: "16px", bottom: "16px", zIndex: 20, maxHeight: sheetOpen ? "min(52vh, 440px)" : "0", opacity: sheetOpen ? 1 : 0, transform: sheetOpen ? "translateY(0)" : "translateY(110%)", transition: "transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease, max-height 0.42s ease", pointerEvents: sheetOpen ? "auto" : "none" }} onClick={(e) => e.stopPropagation()}>
         <div style={{ borderRadius: "20px 20px 16px 16px", padding: "20px 20px 18px", background: "rgba(8,5,18,0.92)", border: "1px solid rgba(200,160,255,0.18)", boxShadow: "0 -12px 48px rgba(0,0,0,0.55)", backdropFilter: "blur(14px)" }}>
           <div style={{ width: "44px", height: "4px", borderRadius: "99px", background: "rgba(255,255,255,0.18)", margin: "0 auto 16px" }} />
-          <p style={{ fontFamily: "'Courier New', monospace", fontSize: "11px", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(200,180,230,0.65)", margin: "0 0 12px", textAlign: "center" }}>
-            Write your wish
-          </p>
-          <textarea
-            value={wishText}
-            onChange={(e) => setWishText(e.target.value)}
-            placeholder="Your words drift upward…"
-            rows={5}
-            style={{ width: "100%", resize: "vertical", minHeight: "120px", borderRadius: "14px", border: "1px solid rgba(200,160,255,0.2)", background: "rgba(3,2,10,0.65)", color: "rgba(245,235,255,0.92)", fontFamily: "'Courier New', monospace", fontSize: "13px", lineHeight: 1.5, padding: "14px 16px", outline: "none", boxSizing: "border-box" }}
-          />
+          <p style={{ fontFamily: "'Courier New', monospace", fontSize: "11px", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(200,180,230,0.65)", margin: "0 0 12px", textAlign: "center" }}>Write your wish</p>
+          <textarea value={wishText} onChange={(e) => setWishText(e.target.value)} placeholder="Your words drift upward…" rows={5}
+            style={{ width: "100%", resize: "vertical", minHeight: "120px", borderRadius: "14px", border: "1px solid rgba(200,160,255,0.2)", background: "rgba(3,2,10,0.65)", color: "rgba(245,235,255,0.92)", fontFamily: "'Courier New', monospace", fontSize: "13px", lineHeight: 1.5, padding: "14px 16px", outline: "none", boxSizing: "border-box" }} />
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "14px" }}>
             <button type="button" onClick={() => setStage("launch")} style={{ fontFamily: "'Courier New', monospace", fontSize: "11px", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(232,196,255,0.95)", background: "rgba(120,70,160,0.45)", border: "1px solid rgba(255,255,255,0.22)", borderRadius: "999px", padding: "10px 22px", cursor: "pointer" }}>
               Done
@@ -588,77 +468,30 @@ export default function SkyPageClient() {
         </div>
       )}
 
-      {/* Wish detail modal */}
       {selectedWish && (
-        <div
-          role="dialog"
-          aria-modal
-          style={{ position: "fixed", inset: 0, zIndex: 11000, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}
-          onClick={() => setSelectedWish(null)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: "420px", width: "100%", borderRadius: "18px", padding: "22px", background: "rgba(8,5,18,0.95)", border: "1px solid rgba(200,160,255,0.22)", boxShadow: "0 24px 60px rgba(0,0,0,0.55)" }}
-          >
-            <p style={{ fontFamily: "'Courier New', monospace", fontSize: "10px", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(200,180,230,0.55)", marginBottom: "12px" }}>
-              A wish in the sky
-            </p>
-
+        <div role="dialog" aria-modal style={{ position: "fixed", inset: 0, zIndex: 11000, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }} onClick={() => setSelectedWish(null)}>
+          <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: "420px", width: "100%", borderRadius: "18px", padding: "22px", background: "rgba(8,5,18,0.95)", border: "1px solid rgba(200,160,255,0.22)", boxShadow: "0 24px 60px rgba(0,0,0,0.55)" }}>
+            <p style={{ fontFamily: "'Courier New', monospace", fontSize: "10px", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(200,180,230,0.55)", marginBottom: "12px" }}>A wish in the sky</p>
             {selectedWish.drawing_data && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={selectedWish.drawing_data} alt="" style={{ width: "100%", maxHeight: "160px", objectFit: "contain", marginBottom: "14px", borderRadius: "12px" }} />
             )}
-
-            <p style={{ fontFamily: "'Courier New', monospace", fontSize: "14px", lineHeight: 1.6, color: "rgba(235,225,255,0.92)", fontStyle: "italic" }}>
-              "{selectedWish.content}"
-            </p>
-
+            <p style={{ fontFamily: "'Courier New', monospace", fontSize: "14px", lineHeight: 1.6, color: "rgba(235,225,255,0.92)", fontStyle: "italic" }}>"{selectedWish.content}"</p>
             <div style={{ marginTop: "18px", display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
-
-              {/* Close button */}
-              <button
-                type="button"
-                onClick={() => setSelectedWish(null)}
-                style={{ fontFamily: "'Courier New', monospace", fontSize: "11px", letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(232,196,255,0.95)", background: "rgba(120,70,160,0.35)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: "999px", padding: "8px 18px", cursor: "pointer" }}
-              >
+              <button type="button" onClick={() => setSelectedWish(null)} style={{ fontFamily: "'Courier New', monospace", fontSize: "11px", letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(232,196,255,0.95)", background: "rgba(120,70,160,0.35)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: "999px", padding: "8px 18px", cursor: "pointer" }}>
                 Close
               </button>
-
-              {/* Heart like button */}
-              <button
-                type="button"
-                disabled={liking}
-                onClick={() => void handleToggleLike()}
-                style={{
-                  display: "flex", alignItems: "center", gap: "6px",
-                  fontFamily: "'Courier New', monospace", fontSize: "13px",
-                  color: selectedWish.liked_by_me ? "rgba(255,120,160,1)" : "rgba(255,255,255,0.4)",
-                  background: selectedWish.liked_by_me ? "rgba(255,80,120,0.15)" : "rgba(255,255,255,0.06)",
-                  border: selectedWish.liked_by_me ? "1px solid rgba(255,100,140,0.4)" : "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: "999px", padding: "8px 16px",
-                  cursor: liking ? "wait" : "pointer",
-                  transition: "all 0.2s ease",
-                  opacity: liking ? 0.6 : 1,
-                }}
-              >
-                <span style={{ fontSize: "16px", lineHeight: 1 }}>
-                  {selectedWish.liked_by_me ? "♥" : "♡"}
-                </span>
+              <button type="button" disabled={liking} onClick={() => void handleToggleLike()}
+                style={{ display: "flex", alignItems: "center", gap: "6px", fontFamily: "'Courier New', monospace", fontSize: "13px", color: selectedWish.liked_by_me ? "rgba(255,120,160,1)" : "rgba(255,255,255,0.4)", background: selectedWish.liked_by_me ? "rgba(255,80,120,0.15)" : "rgba(255,255,255,0.06)", border: selectedWish.liked_by_me ? "1px solid rgba(255,100,140,0.4)" : "1px solid rgba(255,255,255,0.12)", borderRadius: "999px", padding: "8px 16px", cursor: liking ? "wait" : "pointer", transition: "all 0.2s ease", opacity: liking ? 0.6 : 1 }}>
+                <span style={{ fontSize: "16px", lineHeight: 1 }}>{selectedWish.liked_by_me ? "♥" : "♡"}</span>
                 <span>{selectedWish.like_count ?? 0}</span>
               </button>
-
-              {/* Delete button — only for your own wishes */}
               {selectedWish.user_id && selectedWish.user_id === myUserId && (
-                <button
-                  type="button"
-                  disabled={wishDeleting}
-                  onClick={() => void handleDeleteSelectedWish()}
-                  style={{ fontFamily: "'Courier New', monospace", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,200,200,0.95)", background: "rgba(80,30,45,0.45)", border: "1px solid rgba(255,150,160,0.25)", borderRadius: "999px", padding: "8px 18px", cursor: wishDeleting ? "wait" : "pointer", opacity: wishDeleting ? 0.65 : 1 }}
-                >
+                <button type="button" disabled={wishDeleting} onClick={() => void handleDeleteSelectedWish()}
+                  style={{ fontFamily: "'Courier New', monospace", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,200,200,0.95)", background: "rgba(80,30,45,0.45)", border: "1px solid rgba(255,150,160,0.25)", borderRadius: "999px", padding: "8px 18px", cursor: wishDeleting ? "wait" : "pointer", opacity: wishDeleting ? 0.65 : 1 }}>
                   {wishDeleting ? "Removing…" : "Remove wish"}
                 </button>
               )}
-
             </div>
           </div>
         </div>
@@ -669,12 +502,8 @@ export default function SkyPageClient() {
 
 function ToolBtn({ label, active, onClick, icon }: { label: string; active: boolean; onClick: () => void; icon: string }) {
   return (
-    <button
-      type="button"
-      title={label}
-      onClick={onClick}
-      style={{ width: "40px", height: "40px", borderRadius: "12px", border: active ? "1px solid rgba(255,255,255,0.35)" : "1px solid rgba(255,255,255,0.1)", background: active ? "rgba(120,70,160,0.4)" : "rgba(255,255,255,0.06)", color: "rgba(232,220,255,0.92)", cursor: "pointer", fontSize: "16px", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}
-    >
+    <button type="button" title={label} onClick={onClick}
+      style={{ width: "40px", height: "40px", borderRadius: "12px", border: active ? "1px solid rgba(255,255,255,0.35)" : "1px solid rgba(255,255,255,0.1)", background: active ? "rgba(120,70,160,0.4)" : "rgba(255,255,255,0.06)", color: "rgba(232,220,255,0.92)", cursor: "pointer", fontSize: "16px", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
       <span aria-hidden>{icon}</span>
     </button>
   )
