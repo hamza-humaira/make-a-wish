@@ -11,7 +11,7 @@ Rather than feeling like a traditional social media platform, the project is des
 # 🚀 Live Project
 
 🔗 **Live Website:**
-https://make-a-wish-nine.vercel.app/sky
+https://make-a-wish-nine.vercel.app/
 
 ---
 
